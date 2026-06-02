@@ -42,8 +42,11 @@ jobs:
         run: |
           if [ -n "$(gh pr list --base main --head dev --state open --json number -q '.[0].number')" ]; then
             echo "A dev → main PR is already open; the bump was added to it."
-          else
-            gh pr create --base main --head dev \
-              --title "Release v$VERSION" \
-              --body "Automated bump to **v$VERSION**. Merging deploys \`main\` and tags the release with auto-generated notes."
+            exit 0
+          fi
+          if ! gh pr create --base main --head dev \
+                --title "Release v$VERSION" \
+                --body "Automated bump to **v$VERSION**. Merging deploys \`main\` and tags the release with auto-generated notes."; then
+            echo "::warning::Couldn't auto-create the PR. Enable Settings → Actions → General → 'Allow GitHub Actions to create and approve pull requests', then re-run — or open it manually:"
+            echo "https://github.com/${{ github.repository }}/compare/main...dev?expand=1"
           fi
