@@ -14,9 +14,9 @@ new_sqlite_classes = ["GameRoom"]
 
 [vars]
 # SPA origin allowed for CORS (exact scheme+host, no trailing slash).
-ALLOWED_ORIGIN = "https://kanji.kumogallery.com"
+ALLOWED_ORIGIN = "https://kanji-370.pages.dev"
 # Base URL shown to players for the join link / QR (the SPA join route).
-JOIN_BASE_URL = "https://kanji.kumogallery.com/"
+JOIN_BASE_URL = "https://kanji-370.pages.dev"
 # Server-enforced room capacity (not host-configurable; bounds server load).
 MAX_PLAYERS = "15"
 
