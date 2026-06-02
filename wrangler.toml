@@ -1,0 +1,24 @@
+name = "hayaoshi-server"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+
+# Durable Object that holds one game room's state + authoritative loop.
+[[durable_objects.bindings]]
+name = "GAME_ROOM"
+class_name = "GameRoom"
+
+# SQLite-backed DOs (available on the Workers free plan).
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]
+
+[vars]
+# SPA origin allowed for CORS (exact scheme+host, no trailing slash).
+ALLOWED_ORIGIN = "https://kanji.kumogallery.com"
+# Base URL shown to players for the join link / QR (the SPA join route).
+JOIN_BASE_URL = "https://kanji.kumogallery.com/"
+# Server-enforced room capacity (not host-configurable; bounds server load).
+MAX_PLAYERS = "15"
+
+[observability]
+enabled = true
