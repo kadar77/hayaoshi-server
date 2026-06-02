@@ -1,0 +1,31 @@
+name: release
+
+# Runs when main moves (i.e. when you merge a dev → main release PR). If
+# package.json carries a version with no matching GitHub Release yet, it tags
+# vX.Y.Z and publishes auto-generated release notes. Bump the version in the
+# release PR with: npm version <patch|minor|major> --no-git-tag-version
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Tag + GitHub Release if the version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag already released — nothing to do."
+            exit 0
+          fi
+          echo "Creating release $tag"
+          gh release create "$tag" --title "$tag" --generate-notes

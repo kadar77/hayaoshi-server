@@ -1,0 +1,11 @@
+# Categorizes the auto-generated release notes by PR label.
+changelog:
+  categories:
+    - title: ✨ Features
+      labels: [enhancement]
+    - title: 🐛 Fixes
+      labels: [bug]
+    - title: 🧹 Maintenance
+      labels: [chore, dependencies]
+    - title: Other changes
+      labels: ["*"]

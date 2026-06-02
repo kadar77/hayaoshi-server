@@ -14,9 +14,18 @@ npm test           # vitest (scoring unit + full-flow integration)
 
 ## Workflow
 
+`dev` is the integration branch; `main` is production (auto-deployed).
+
 1. Open an issue first for anything non-trivial.
-2. Branch off `main`, keep PRs focused.
+2. Branch off `dev` and open your PR **against `dev`**. Keep PRs focused.
 3. Make sure `npm run typecheck` and `npm test` pass before pushing.
+
+### Releases (maintainer)
+
+Promote `dev` → `main`: bump the version on `dev`
+(`npm version <patch|minor|major> --no-git-tag-version`), open a `dev` → `main`
+PR, and merge it. On merge, `main` deploys and CI tags `vX.Y.Z` + publishes a
+GitHub Release with auto-generated notes.
 
 ## Conventions
 
