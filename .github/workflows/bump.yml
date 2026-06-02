@@ -1,0 +1,49 @@
+name: bump version
+
+# Manually triggered from the Actions tab. Bumps package.json (+ lockfile) on
+# dev and opens/updates the dev → main release PR — fully web-driven, no local
+# terminal needed. Merging that PR deploys main and tags the release.
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: Version bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: dev
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Bump version on dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version ${{ inputs.level }} --no-git-tag-version
+          v=$(node -p "require('./package.json').version")
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          git commit -am "chore: bump version to $v for release"
+          git push origin dev
+      - name: Open or update the dev → main release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -n "$(gh pr list --base main --head dev --state open --json number -q '.[0].number')" ]; then
+            echo "A dev → main PR is already open; the bump was added to it."
+          else
+            gh pr create --base main --head dev \
+              --title "Release v$VERSION" \
+              --body "Automated bump to **v$VERSION**. Merging deploys \`main\` and tags the release with auto-generated notes."
+          fi
