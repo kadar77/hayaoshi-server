@@ -72,10 +72,10 @@ function parseConfig(raw: unknown): RoomConfig {
 
 export function parseProfile(raw: unknown, field = 'profile'): Profile {
   const o = obj(raw, field)
+  // Color is intentionally ignored — the server assigns it on join.
   return {
     name: nonEmpty(o.name, `${field}.name`, LIMITS.NAME_MAX),
     avatar: nonEmpty(o.avatar, `${field}.avatar`, 32),
-    color: nonEmpty(o.color, `${field}.color`, 32),
   }
 }
 
