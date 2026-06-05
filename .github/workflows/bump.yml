@@ -1,10 +1,16 @@
 name: bump version
 
-# Manually triggered from the Actions tab. Bumps package.json (+ lockfile) on
-# dev and prints a link to open the dev → main release PR. Open that PR
-# yourself (one click) so CI runs on it; merging it deploys main and tags the
-# release. (A PR auto-created by GITHUB_TOKEN wouldn't trigger CI, so the
-# required check would never report — that's why we don't auto-create it.)
+# One-click release from the Actions tab. Bumps package.json (+ lockfile) on
+# dev and opens the dev → main release PR.
+#
+# It authenticates with a user token (RELEASE_TOKEN secret) rather than the
+# built-in GITHUB_TOKEN, because pushes/PRs made by GITHUB_TOKEN do NOT trigger
+# other workflows — so the required CI check would never run. A real token
+# makes CI run on the PR, so it can actually merge.
+#
+# Setup (once per repo): create a fine-grained PAT with this repo's
+# Contents: Read/write + Pull requests: Read/write, and add it as the
+# RELEASE_TOKEN Actions secret.
 on:
   workflow_dispatch:
     inputs:
@@ -16,16 +22,25 @@ on:
 
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   bump:
     runs-on: ubuntu-latest
     steps:
+      - name: Check RELEASE_TOKEN is configured
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error title=Missing RELEASE_TOKEN::Create a fine-grained PAT (Contents + Pull requests: Read/write) and add it as the RELEASE_TOKEN Actions secret."
+            exit 1
+          fi
       - uses: actions/checkout@v6
         with:
           ref: dev
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }} # so the push/PR trigger CI
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -38,15 +53,15 @@ jobs:
           echo "VERSION=$v" >> "$GITHUB_ENV"
           git commit -am "chore: bump version to $v for release"
           git push origin dev
-      - name: Release PR link
+      - name: Open the dev → main release PR
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          echo "::notice title=Version bumped::v$VERSION pushed to dev."
           existing="$(gh pr list --base main --head dev --state open --json number -q '.[0].number' || true)"
           if [ -n "$existing" ]; then
-            echo "A dev → main PR (#$existing) is already open; the bump was added to it."
+            echo "dev → main PR #$existing already open; the bump was added to it."
           else
-            echo "Open the release PR (CI will run on it so the required check reports):"
-            echo "https://github.com/${{ github.repository }}/compare/main...dev?expand=1"
+            gh pr create --base main --head dev \
+              --title "Release v$VERSION" \
+              --body "Automated bump to **v$VERSION**. Merging deploys \`main\` and tags the release with auto-generated notes."
           fi
