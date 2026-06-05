@@ -1,8 +1,10 @@
 name: bump version
 
 # Manually triggered from the Actions tab. Bumps package.json (+ lockfile) on
-# dev and opens/updates the dev → main release PR — fully web-driven, no local
-# terminal needed. Merging that PR deploys main and tags the release.
+# dev and prints a link to open the dev → main release PR. Open that PR
+# yourself (one click) so CI runs on it; merging it deploys main and tags the
+# release. (A PR auto-created by GITHUB_TOKEN wouldn't trigger CI, so the
+# required check would never report — that's why we don't auto-create it.)
 on:
   workflow_dispatch:
     inputs:
@@ -14,7 +16,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   bump:
@@ -36,17 +38,15 @@ jobs:
           echo "VERSION=$v" >> "$GITHUB_ENV"
           git commit -am "chore: bump version to $v for release"
           git push origin dev
-      - name: Open or update the dev → main release PR
+      - name: Release PR link
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -n "$(gh pr list --base main --head dev --state open --json number -q '.[0].number')" ]; then
-            echo "A dev → main PR is already open; the bump was added to it."
-            exit 0
-          fi
-          if ! gh pr create --base main --head dev \
-                --title "Release v$VERSION" \
-                --body "Automated bump to **v$VERSION**. Merging deploys \`main\` and tags the release with auto-generated notes."; then
-            echo "::warning::Couldn't auto-create the PR. Enable Settings → Actions → General → 'Allow GitHub Actions to create and approve pull requests', then re-run — or open it manually:"
+          echo "::notice title=Version bumped::v$VERSION pushed to dev."
+          existing="$(gh pr list --base main --head dev --state open --json number -q '.[0].number' || true)"
+          if [ -n "$existing" ]; then
+            echo "A dev → main PR (#$existing) is already open; the bump was added to it."
+          else
+            echo "Open the release PR (CI will run on it so the required check reports):"
             echo "https://github.com/${{ github.repository }}/compare/main...dev?expand=1"
           fi
