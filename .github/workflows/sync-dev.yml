@@ -1,0 +1,23 @@
+name: sync dev
+
+# Fast-forward dev up to main so the two branches stay aligned (a release PR
+# merge leaves a merge commit on main that dev lacks). Runs automatically after
+# a push to main, and can also be run manually from the Actions tab. If dev has
+# its own commits and can't fast-forward, the push is safely rejected.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ff-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - run: git push origin HEAD:dev
