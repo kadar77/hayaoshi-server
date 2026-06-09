@@ -451,13 +451,11 @@ export class GameRoom {
   // ─── Helpers ────────────────────────────────────────────────────────
   private addPlayer(profile: Profile, isHost: boolean, token: string): PlayerRec {
     const id = genId()
-    // Keep every player's color distinct: prefer their pick, else the first
-    // free palette color, else a generated hue (so it scales past the palette
-    // size up to MAX_PLAYERS — no duplicates even with >12 players).
+    // The server is the source of truth for colors (clients don't pick one):
+    // assign the first free palette color, else a generated hue (so it scales
+    // past the palette size up to MAX_PLAYERS — always distinct).
     const used = new Set(Object.values(this.players).map((p) => p.color))
-    const color = used.has(profile.color)
-      ? PLAYER_COLORS.find((c) => !used.has(c)) ?? uniqueHueColor(used)
-      : profile.color
+    const color = PLAYER_COLORS.find((c) => !used.has(c)) ?? uniqueHueColor(used)
     const rec: PlayerRec = {
       id,
       name: profile.name,
