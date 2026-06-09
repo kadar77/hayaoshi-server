@@ -1,0 +1,21 @@
+name: sync dev
+
+# After a release merge to main, fast-forward dev back up to main so the two
+# branches stay aligned (the PR merge leaves a merge commit on main that dev
+# lacks). If dev has its own commits and can't fast-forward, the push is safely
+# rejected and you'd reconcile dev manually.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  ff-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git push origin HEAD:dev
