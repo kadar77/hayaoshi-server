@@ -36,7 +36,7 @@ jobs:
             echo "::error title=Missing RELEASE_TOKEN::Create a fine-grained PAT (Contents + Pull requests: Read/write) and add it as the RELEASE_TOKEN Actions secret."
             exit 1
           fi
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: dev
           fetch-depth: 0
